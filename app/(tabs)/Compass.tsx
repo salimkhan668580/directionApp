@@ -354,7 +354,7 @@ const compassStyles = StyleSheet.create({
   },
   keyText: {
     fontSize: 11,
-    color: "#687076",
+    color: "#11181C",
   },
 });
 
