@@ -20,8 +20,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/Qubla png.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundImage": "./assets/images/Kaaba.png",
+        "monochromeImage": "./assets/images/Kaaba.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
