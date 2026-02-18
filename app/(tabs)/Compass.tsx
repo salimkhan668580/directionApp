@@ -4,11 +4,11 @@ import { Magnetometer } from "expo-sensors";
 import { useCallback, useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Svg, {
-  Circle,
-  G,
-  Line,
-  Polygon,
-  Text as SvgText,
+    Circle,
+    G,
+    Line,
+    Polygon,
+    Text as SvgText,
 } from "react-native-svg";
 import { CARD_SHADOW, THEME_BLUE, styles } from "./index";
 
@@ -130,83 +130,83 @@ const Compass = () => {
       <View style={compassStyles.compassBlock}>
         <View style={compassStyles.compassSvgWrap}>
           <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
-          {/* Dial rotates with heading; needle stays fixed pointing up */}
-          <G
-            transform={`translate(${CX},${CY}) rotate(${-heading}) translate(${-CX},${-CY})`}
-          >
-            {/* Simple compass circle */}
-            <Circle
-              cx={CX}
-              cy={CY}
-              r={R_RING}
-              fill={THEME_BLUE}
-              stroke={DIAL_EDGE}
-              strokeWidth={2}
-            />
+            {/* Dial rotates with heading; needle stays fixed pointing up */}
+            <G
+              transform={`translate(${CX},${CY}) rotate(${-heading}) translate(${-CX},${-CY})`}
+            >
+              {/* Simple compass circle */}
+              <Circle
+                cx={CX}
+                cy={CY}
+                r={R_RING}
+                fill={THEME_BLUE}
+                stroke={DIAL_EDGE}
+                strokeWidth={2}
+              />
 
-            {/* Simple ticks every 30° */}
-            {Array.from({ length: 12 }, (_, i) => {
-              const deg = i * 30;
-              const a = degToRad(deg - 90);
-              const x1 = CX + (R_RING - 10) * Math.cos(a);
-              const y1 = CY + (R_RING - 10) * Math.sin(a);
-              const x2 = CX + R_RING * Math.cos(a);
-              const y2 = CY + R_RING * Math.sin(a);
-              return (
-                <Line
-                  key={deg}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke="#fff"
-                  strokeWidth={2}
-                />
-              );
-            })}
+              {/* Simple ticks every 30° */}
+              {Array.from({ length: 12 }, (_, i) => {
+                const deg = i * 30;
+                const a = degToRad(deg - 90);
+                const x1 = CX + (R_RING - 10) * Math.cos(a);
+                const y1 = CY + (R_RING - 10) * Math.sin(a);
+                const x2 = CX + R_RING * Math.cos(a);
+                const y2 = CY + R_RING * Math.sin(a);
+                return (
+                  <Line
+                    key={deg}
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    stroke="#fff"
+                    strokeWidth={2}
+                  />
+                );
+              })}
 
-            {/* Cardinal: N, E, S, W */}
-            {[
-              { text: "N", angle: 0 },
-              { text: "E", angle: 90 },
-              { text: "S", angle: 180 },
-              { text: "W", angle: 270 },
-            ].map(({ text, angle }) => {
-              const a = degToRad(angle - 90);
-              const r = R_LABELS;
-              const x = CX + r * Math.cos(a);
-              const y = CY + r * Math.sin(a);
-              return (
-                <SvgText
-                  key={text}
-                  x={x}
-                  y={y}
-                  fill="#fff"
-                  fontSize={14}
-                  fontWeight="bold"
-                  textAnchor="middle"
-                >
-                  {text}
-                </SvgText>
-              );
-            })}
+              {/* Cardinal: N, E, S, W */}
+              {[
+                { text: "N", angle: 0 },
+                { text: "E", angle: 90 },
+                { text: "S", angle: 180 },
+                { text: "W", angle: 270 },
+              ].map(({ text, angle }) => {
+                const a = degToRad(angle - 90);
+                const r = R_LABELS;
+                const x = CX + r * Math.cos(a);
+                const y = CY + r * Math.sin(a);
+                return (
+                  <SvgText
+                    key={text}
+                    x={x}
+                    y={y}
+                    fill="#fff"
+                    fontSize={14}
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    {text}
+                  </SvgText>
+                );
+              })}
 
-            {/* Center dot */}
-            <Circle cx={CX} cy={CY} r={6} fill="#fff" />
-          </G>
+              {/* Center dot */}
+              <Circle cx={CX} cy={CY} r={6} fill="#fff" />
+            </G>
 
-          {/* Needle – fixed (red North up, grey South down), no image */}
-          <G>
-            <Polygon
-              points={`${CX},${CY - 70} ${CX - 10},${CY} ${CX},${CY - 8} ${CX + 10},${CY}`}
-              fill="#E53935"
-            />
-            <Polygon
-              points={`${CX},${CY + 70} ${CX - 10},${CY} ${CX},${CY + 8} ${CX + 10},${CY}`}
-              fill="#78909C"
-            />
-            <Circle cx={CX} cy={CY} r={8} fill="#ECEFF1" />
-          </G>
+            {/* Needle – fixed (red North up, grey South down), no image */}
+            <G>
+              <Polygon
+                points={`${CX},${CY - 70} ${CX - 10},${CY} ${CX},${CY - 8} ${CX + 10},${CY}`}
+                fill="#E53935"
+              />
+              <Polygon
+                points={`${CX},${CY + 70} ${CX - 10},${CY} ${CX},${CY + 8} ${CX + 10},${CY}`}
+                fill="#78909C"
+              />
+              <Circle cx={CX} cy={CY} r={8} fill="#ECEFF1" />
+            </G>
           </Svg>
 
           {/* Kaaba icon overlay – points toward Qibla (21.4225° N, 39.8262° E) */}
@@ -268,8 +268,8 @@ const Compass = () => {
   );
 };
 
-const KABA_ICON_SIZE = 30;
-const KABA_OFFSET = R_RING + 22;
+const KABA_ICON_SIZE = 26;
+const KABA_OFFSET = R_RING + 150;
 
 const compassStyles = StyleSheet.create({
   compassBlock: {
