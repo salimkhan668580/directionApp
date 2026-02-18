@@ -4,10 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Dimensions,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import Location from './Location';
@@ -26,6 +26,14 @@ export const CARD_SHADOW = Platform.select({
 
 const ALADHAN_GTOH = 'https://api.aladhan.com/v1/gToH';
 
+const LANGUAGE_OPTIONS = [
+  { value: 'hindi', label: 'Hindi' },
+  { value: 'english', label: 'English' },
+  { value: 'arabic', label: 'Arabic' },
+] as const;
+
+type LanguageValue = (typeof LANGUAGE_OPTIONS)[number]['value'];
+
 function formatEnglishDate(d: Date): string {
   return d.toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -39,6 +47,8 @@ export default function HomeScreen() {
   const windowHeight = Dimensions.get('window').height;
   const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
   const [hijriText, setHijriText] = useState<string | null>(null);
+  const [language, setLanguage] = useState<LanguageValue>('english');
+  const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
 
   const handleLocationLoaded = useCallback((info: LocationInfo) => {
     setLocationInfo(info);
@@ -89,12 +99,51 @@ export default function HomeScreen() {
         {/* Header */}
    
 
-        {/* Date */}
-        <View style={styles.dateBlock}>
-          <View style={styles.dot} />
-          <View>
-            <Text style={styles.dateText}>{englishDate}</Text>
-            <Text style={styles.hijriText}>{hijriText ?? '...'}</Text>
+        {/* Date + Language row */}
+        <View style={styles.dateLanguageRow}>
+          <View style={styles.dateBlock}>
+            <View style={styles.dot} />
+            <View>
+              <Text style={styles.dateText}>{englishDate}</Text>
+              <Text style={styles.hijriText}>{hijriText ?? '...'}</Text>
+            </View>
+          </View>
+          <View style={styles.languageDropdownWrap}>
+            <Pressable
+              style={styles.languageTrigger}
+              onPress={() => setLanguageDropdownOpen((v) => !v)}
+            >
+              <Text style={styles.languageTriggerText}>
+                {LANGUAGE_OPTIONS.find((o) => o.value === language)?.label ?? 'English'}
+              </Text>
+              <MaterialIcons
+                name={languageDropdownOpen ? 'arrow-drop-up' : 'arrow-drop-down'}
+                size={24}
+                color="#fff"
+              />
+            </Pressable>
+            {languageDropdownOpen && (
+              <View style={styles.languageDropdownInline}>
+                {LANGUAGE_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    style={[
+                      styles.languageOption,
+                      language === opt.value && styles.languageOptionSelected,
+                    ]}
+                    onPress={() => {
+                      setLanguage(opt.value);
+                      setLanguageDropdownOpen(false);
+                    }}
+                  >
+                    <Text style={styles.languageOptionText}>{opt.label}</Text>
+                    {language === opt.value && (
+                      <MaterialIcons name="check" size={20} color={THEME_BLUE} />
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
@@ -158,7 +207,6 @@ export default function HomeScreen() {
   },
   dateBlock: {
     flexDirection: 'row',
-    marginBottom: 12,
   },
   dateText: {
     fontSize: 15,
@@ -169,6 +217,71 @@ export default function HomeScreen() {
     fontSize: 13,
     color: 'rgba(255,255,255,0.9)',
     marginTop: 2,
+  },
+  dateLanguageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  languageTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+    gap: 4,
+  },
+  languageTriggerText: {
+    fontSize: 15,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  languageDropdownWrap: {
+    alignSelf: 'flex-end',
+    zIndex: 1000,
+    ...(Platform.OS === 'android' && { elevation: 10 }),
+  },
+  languageDropdownInline: {
+    position: 'absolute',
+    top: '100%',
+    right: 0,
+    marginTop: 4,
+    zIndex: 1001,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    minWidth: 160,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+      },
+      android: { elevation: 12 },
+    }),
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  languageOptionSelected: {
+    backgroundColor: 'rgba(52, 174, 214, 0.1)',
+  },
+  languageOptionText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
   locationRow: {
     flexDirection: 'row',
