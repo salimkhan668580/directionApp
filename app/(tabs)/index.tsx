@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Dimensions,
@@ -24,14 +24,48 @@ export const CARD_SHADOW = Platform.select({
 
 
 
+const ALADHAN_GTOH = 'https://api.aladhan.com/v1/gToH';
+
+function formatEnglishDate(d: Date): string {
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).replace(/\s+(\d{4})$/, ', $1');
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const windowHeight = Dimensions.get('window').height;
   const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
+  const [hijriText, setHijriText] = useState<string | null>(null);
 
   const handleLocationLoaded = useCallback((info: LocationInfo) => {
     setLocationInfo(info);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    const dateStr = `${dd}-${mm}-${yyyy}`;
+    fetch(`${ALADHAN_GTOH}?date=${dateStr}`)
+      .then((res) => res.json())
+      .then((json: { code?: number; data?: { hijri?: { day: string; month?: { en?: string }; year: string } } }) => {
+        if (cancelled || json.code !== 200 || !json.data?.hijri) return;
+        const h = json.data.hijri;
+        const monthName = h.month?.en ?? '';
+        setHijriText(`${h.day} ${monthName}, ${h.year}`);
+      })
+      .catch(() => {
+        if (!cancelled) setHijriText(null);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const englishDate = formatEnglishDate(new Date());
 
   const topPadding = Math.max(insets.top, 28);
   const bottomPadding = 24 + insets.bottom;
@@ -59,8 +93,8 @@ export default function HomeScreen() {
         <View style={styles.dateBlock}>
           <View style={styles.dot} />
           <View>
-            <Text style={styles.dateText}>18 February, 2026</Text>
-            <Text style={styles.hijriText}>29 Sha{"'"}ban, 1447</Text>
+            <Text style={styles.dateText}>{englishDate}</Text>
+            <Text style={styles.hijriText}>{hijriText ?? '...'}</Text>
           </View>
         </View>
 

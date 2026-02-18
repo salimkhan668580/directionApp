@@ -122,9 +122,9 @@ const Compass = () => {
           </View>
           <Text style={styles.compassCardTitle}>Compass</Text>
         </View>
-        <TouchableOpacity style={styles.homeIconButton}>
+        {/* <TouchableOpacity style={styles.homeIconButton}>
           <MaterialIcons name="home" size={24} color={THEME_BLUE} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <View style={compassStyles.compassBlock}>
