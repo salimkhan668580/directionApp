@@ -46,7 +46,8 @@
         {
           "sounds": []
         }
-      ]
+      ],
+      "expo-alarm-module"
     ],
     "experiments": {
       "typedRoutes": true,

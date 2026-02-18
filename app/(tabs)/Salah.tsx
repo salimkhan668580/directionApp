@@ -5,8 +5,20 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
+import {
+  removeAlarm as removeNativeAlarm,
+  scheduleAlarm as scheduleNativeAlarm,
+} from "expo-alarm-module";
 
 const isExpoGo = Constants.appOwnership === "expo";
 
@@ -28,6 +40,18 @@ export type PrayerTimeEntry = {
   icon: "nightlight-round" | "light-mode" | "wb-sunny" | "wb-twilight" | "bedtime";
 };
 
+const ALADHAN_API_BASE = "https://api.aladhan.com/v1/timingsByCity";
+const DEFAULT_CITY = "Delhi";
+const DEFAULT_COUNTRY = "India";
+
+const PRAYER_ICONS: PrayerTimeEntry["icon"][] = [
+  "nightlight-round",
+  "light-mode",
+  "wb-sunny",
+  "wb-twilight",
+  "bedtime",
+];
+
 const DEFAULT_PRAYER_TIMES: PrayerTimeEntry[] = [
   { name: "Fajr", time: "05:24 am", icon: "nightlight-round" },
   { name: "Dhuhr", time: "12:18 pm", icon: "light-mode" },
@@ -36,15 +60,63 @@ const DEFAULT_PRAYER_TIMES: PrayerTimeEntry[] = [
   { name: "Isha", time: "07:24 pm", icon: "bedtime" },
 ];
 
-async function loadPrayerTimes(): Promise<PrayerTimeEntry[]> {
+type AladhanTimings = {
+  Fajr: string;
+  Dhuhr: string;
+  Asr: string;
+  Maghrib: string;
+  Isha: string;
+};
+
+/** Convert API 24h "HH:mm" to display "h:mm am/pm". */
+function formatTime24to12(hhmm: string): string {
+  const [hStr, mStr] = hhmm.trim().split(":");
+  const h = parseInt(hStr ?? "0", 10);
+  if (h === 12) return `12:${(mStr ?? "00").padStart(2, "0")} pm`;
+  if (h === 0) return `12:${(mStr ?? "00").padStart(2, "0")} am`;
+  const hour = h > 12 ? h - 12 : h;
+  const ampm = h >= 12 ? "pm" : "am";
+  return `${hour}:${(mStr ?? "00").padStart(2, "0")} ${ampm}`;
+}
+
+/** Fetch prayer times from Aladhan API for a given date and city. */
+async function fetchPrayerTimesFromAPI(
+  city: string,
+  country: string,
+  date?: Date
+): Promise<PrayerTimeEntry[]> {
+  const d = date ?? new Date();
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const dateStr = `${dd}-${mm}-${yyyy}`;
+  const url = `${ALADHAN_API_BASE}/${dateStr}?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=2`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Aladhan API error: ${res.status}`);
+  const json = (await res.json()) as {
+    code?: number;
+    data?: { timings?: AladhanTimings };
+  };
+  if (json.code !== 200 || !json.data?.timings) throw new Error("Invalid Aladhan response");
+  const t = json.data.timings;
+  const names: (keyof AladhanTimings)[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+  return names.map((name, i) => ({
+    name,
+    time: formatTime24to12(t[name]),
+    icon: PRAYER_ICONS[i],
+  }));
+}
+
+/** Returns stored times or null if nothing saved. */
+async function loadPrayerTimes(): Promise<PrayerTimeEntry[] | null> {
   try {
     const raw = await AsyncStorage.getItem(PRAYER_TIMES_STORAGE_KEY);
-    if (!raw) return DEFAULT_PRAYER_TIMES;
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as PrayerTimeEntry[];
-    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_PRAYER_TIMES;
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
     return parsed;
   } catch {
-    return DEFAULT_PRAYER_TIMES;
+    return null;
   }
 }
 
@@ -90,6 +162,32 @@ async function saveAlarms(alarms: AlarmItem[]): Promise<void> {
   await AsyncStorage.setItem(ALARM_STORAGE_KEY, JSON.stringify(alarms));
 }
 
+/** Schedules a native Android alarm (full-screen, default alarm sound). Returns true if scheduled, false to fall back to notification. */
+async function tryScheduleNativeAlarm(
+  uid: string,
+  triggerAt: Date,
+  prayerName: string,
+  timeLabel: string
+): Promise<boolean> {
+  if (Platform.OS !== "android") return false;
+  try {
+    await scheduleNativeAlarm({
+      uid,
+      day: triggerAt,
+      title: `${prayerName} – Salah`,
+      description: `Alarm at ${timeLabel}`,
+      showDismiss: true,
+      showSnooze: true,
+      snoozeInterval: 5,
+      repeating: false,
+      active: true,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function setupNotificationChannel(): Promise<void> {
   await Notifications.setNotificationChannelAsync(ALARM_CHANNEL_ID, {
     name: "Salah Alarms",
@@ -127,7 +225,12 @@ async function scheduleAlarmNotification(
   return id;
 }
 
-function Salah() {
+type SalahProps = {
+  city?: string | null;
+  country?: string | null;
+};
+
+function Salah({ city = null, country = null }: SalahProps) {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedPrayer, setSelectedPrayer] = useState<PrayerTimeEntry | null>(null);
   const [alarmTime, setAlarmTime] = useState(new Date());
@@ -141,13 +244,52 @@ function Salah() {
 
   const loadStoredPrayerTimes = useCallback(async () => {
     const stored = await loadPrayerTimes();
-    setPrayerTimes(stored);
-  }, []);
+    if (stored != null) {
+      setPrayerTimes(stored);
+      return;
+    }
+    if (city && country) {
+      try {
+        const apiTimes = await fetchPrayerTimesFromAPI(city, country);
+        await savePrayerTimes(apiTimes);
+        setPrayerTimes(apiTimes);
+      } catch {
+        setPrayerTimes(DEFAULT_PRAYER_TIMES);
+      }
+    } else {
+      try {
+        const apiTimes = await fetchPrayerTimesFromAPI(DEFAULT_CITY, DEFAULT_COUNTRY);
+        await savePrayerTimes(apiTimes);
+        setPrayerTimes(apiTimes);
+      } catch {
+        setPrayerTimes(DEFAULT_PRAYER_TIMES);
+      }
+    }
+  }, [city, country]);
 
   useEffect(() => {
     loadStoredAlarms();
     loadStoredPrayerTimes();
   }, [loadStoredAlarms, loadStoredPrayerTimes]);
+
+  useEffect(() => {
+    if (!city || !country) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const apiTimes = await fetchPrayerTimesFromAPI(city, country);
+        if (!cancelled) {
+          await savePrayerTimes(apiTimes);
+          setPrayerTimes(apiTimes);
+        }
+      } catch {
+        if (!cancelled) setPrayerTimes(DEFAULT_PRAYER_TIMES);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [city, country]);
 
   const openTimePicker = (p: PrayerTimeEntry) => {
     setSelectedPrayer(p);
@@ -204,15 +346,25 @@ function Salah() {
       return;
     }
 
+    const alarmId = `${selectedPrayer.name}-${triggerAt.getTime()}`;
+    const existingAlarm = alarms.find((a) => a.prayerName === selectedPrayer.name);
+    if (existingAlarm && Platform.OS === "android") {
+      try {
+        await removeNativeAlarm(existingAlarm.id);
+      } catch {
+        // ignore (e.g. was notification-only)
+      }
+    }
+
     try {
-      const notificationId = await scheduleAlarmNotification(
-        triggerAt,
-        selectedPrayer.name,
-        timeStr
-      );
+      const usedNativeAlarm =
+        (await tryScheduleNativeAlarm(alarmId, triggerAt, selectedPrayer.name, timeStr)) === true;
+      const notificationId = usedNativeAlarm
+        ? "native"
+        : await scheduleAlarmNotification(triggerAt, selectedPrayer.name, timeStr);
 
       const newAlarm: AlarmItem = {
-        id: `${selectedPrayer.name}-${triggerAt.getTime()}`,
+        id: alarmId,
         prayerName: selectedPrayer.name,
         time: timeStr,
         triggerAt: triggerAt.getTime(),
@@ -240,6 +392,53 @@ function Salah() {
 
   const hasAlarmFor = (prayerName: string) => alarms.some((a) => a.prayerName === prayerName);
 
+  const removeAlarm = async (prayerName: string) => {
+    const alarm = alarms.find((a) => a.prayerName === prayerName);
+    if (!alarm) return;
+    if (Platform.OS === "android") {
+      try {
+        await removeNativeAlarm(alarm.id);
+      } catch {
+        // ignore if was notification-only
+      }
+    }
+    if (
+      alarm.notificationId &&
+      alarm.notificationId !== "native" &&
+      alarm.notificationId !== "expo-go"
+    ) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(alarm.notificationId);
+      } catch {
+        // ignore
+      }
+    }
+    const updatedAlarms = alarms.filter((a) => a.prayerName !== prayerName);
+    await saveAlarms(updatedAlarms);
+    setAlarms(updatedAlarms);
+    Toast.show({
+      type: "success",
+      text1: "Alarm removed",
+      text2: `${prayerName} alarm cancelled`,
+    });
+  };
+
+  const onPrayerCardPress = (p: PrayerTimeEntry) => {
+    if (hasAlarmFor(p.name)) {
+      Alert.alert(
+        p.name + " – Alarm",
+        "Change the time or remove this alarm.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Remove alarm", style: "destructive", onPress: () => removeAlarm(p.name) },
+          { text: "Change time", onPress: () => openTimePicker(p) },
+        ]
+      );
+    } else {
+      openTimePicker(p);
+    }
+  };
+
   return (
     <View style={[styles.card, CARD_SHADOW, styles.sectionEqual]}>
       <View style={styles.salahHeader}>
@@ -260,7 +459,7 @@ function Salah() {
           <TouchableOpacity
             key={p.name}
             style={styles.prayerCard}
-            onPress={() => openTimePicker(p)}
+            onPress={() => onPrayerCardPress(p)}
             activeOpacity={0.8}
           >
             {hasAlarmFor(p.name) && (
@@ -271,7 +470,9 @@ function Salah() {
             <MaterialIcons name={p.icon} size={28} color="#fff" />
             <Text style={styles.prayerName}>{p.name}</Text>
             <Text style={styles.prayerTime}>{p.time}</Text>
-            <Text style={salahStyles.alarmHint}>Tap to set alarm</Text>
+            <Text style={salahStyles.alarmHint}>
+              {hasAlarmFor(p.name) ? "Tap to change or remove" : "Tap to set alarm"}
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>

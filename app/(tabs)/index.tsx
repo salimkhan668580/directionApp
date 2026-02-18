@@ -1,4 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useCallback, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Dimensions,
@@ -12,6 +13,7 @@ import {
 import Location from './Location';
 import Compass from './Compass';
 import Salah from './Salah';
+import type { LocationInfo } from './Location';
 
 export const THEME_BLUE = '#34AED6';
 export const COMPASS_BG = '#2A9EC4';
@@ -25,6 +27,11 @@ export const CARD_SHADOW = Platform.select({
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const windowHeight = Dimensions.get('window').height;
+  const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
+
+  const handleLocationLoaded = useCallback((info: LocationInfo) => {
+    setLocationInfo(info);
+  }, []);
 
   const topPadding = Math.max(insets.top, 28);
   const bottomPadding = 24 + insets.bottom;
@@ -58,11 +65,11 @@ export default function HomeScreen() {
         </View>
 
         {/* Location */}
-      <Location/>
+      <Location onLocationLoaded={handleLocationLoaded} />
       </View>
 
       {/* Card 1: Salah Timings */}
-      <Salah/>
+      <Salah city={locationInfo?.city ?? null} country={locationInfo?.country ?? null} />
 
       {/* Card 2: Compass */}
 

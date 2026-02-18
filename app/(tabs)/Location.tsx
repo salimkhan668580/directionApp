@@ -4,7 +4,17 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { styles } from "./index";
 
-const Location = () => {
+export type LocationInfo = {
+  city: string;
+  country: string;
+  locationName: string;
+};
+
+type LocationProps = {
+  onLocationLoaded?: (info: LocationInfo) => void;
+};
+
+const Location = ({ onLocationLoaded }: LocationProps) => {
   const [locationName, setLocationName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +43,14 @@ const Location = () => {
 
         if (cancelled || !address) return;
 
-        const parts = [
-          address.city ?? address.subregion,
-          address.region,
-          address.country,
-        ].filter(Boolean);
-        setLocationName(parts.length > 0 ? parts.join(", ") : "Current location");
+        const city = (address.city ?? address.subregion ?? "").trim();
+        const country = (address.country ?? "").trim();
+        const parts = [city, address.region, country].filter(Boolean);
+        const name = parts.length > 0 ? parts.join(", ") : "Current location";
+        setLocationName(name);
+        if (city && country) {
+          onLocationLoaded?.({ city, country, locationName: name });
+        }
       } catch (e) {
         if (!cancelled) {
           setError(
@@ -54,7 +66,7 @@ const Location = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [onLocationLoaded]);
 
   return (
     <View style={styles.locationRow}>
