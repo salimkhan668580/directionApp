@@ -1,3 +1,4 @@
+import { useTranslation } from "@/context/TranslationContext";
 import { CARD_SHADOW, styles, THEME_BLUE } from "./index";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -225,6 +226,14 @@ async function scheduleAlarmNotification(
   return id;
 }
 
+const PRAYER_KEYS: Record<string, string> = {
+  Fajr: "prayerFajr",
+  Dhuhr: "prayerDhuhr",
+  Asr: "prayerAsr",
+  Maghrib: "prayerMaghrib",
+  Isha: "prayerIsha",
+};
+
 type SalahProps = {
   city?: string | null;
   country?: string | null;
@@ -236,6 +245,7 @@ function Salah({ city = null, country = null }: SalahProps) {
   const [alarmTime, setAlarmTime] = useState(new Date());
   const [alarms, setAlarms] = useState<AlarmItem[]>([]);
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimeEntry[]>(DEFAULT_PRAYER_TIMES);
+  const { t } = useTranslation();
 
   const loadStoredAlarms = useCallback(async () => {
     const stored = await loadAlarms();
@@ -330,8 +340,8 @@ function Salah({ city = null, country = null }: SalahProps) {
       updatePrayerTimeInList();
       Toast.show({
         type: "success",
-        text1: "Alarm saved",
-        text2: `${selectedPrayer.name} at ${timeStr}. Use a development build for real notifications.`,
+        text1: t("salah.alarmSaved"),
+        text2: `${selectedPrayer.name} at ${timeStr}. ${t("salah.useDevBuild")}`,
       });
       return;
     }
@@ -340,8 +350,8 @@ function Salah({ city = null, country = null }: SalahProps) {
     if (!hasPermission) {
       Toast.show({
         type: "error",
-        text1: "Permission needed",
-        text2: "Enable notifications to set alarms",
+        text1: t("salah.permissionNeeded"),
+        text2: t("salah.enableNotifications"),
       });
       return;
     }
@@ -378,14 +388,14 @@ function Salah({ city = null, country = null }: SalahProps) {
 
       Toast.show({
         type: "success",
-        text1: "Alarm set",
+        text1: t("salah.alarmSet"),
         text2: `${selectedPrayer.name} at ${timeStr}`,
       });
     } catch (e) {
       Toast.show({
         type: "error",
-        text1: "Alarm failed",
-        text2: e instanceof Error ? e.message : "Could not set alarm",
+        text1: t("salah.alarmFailed"),
+        text2: e instanceof Error ? e.message : t("salah.couldNotSetAlarm"),
       });
     }
   };
@@ -418,20 +428,20 @@ function Salah({ city = null, country = null }: SalahProps) {
     setAlarms(updatedAlarms);
     Toast.show({
       type: "success",
-      text1: "Alarm removed",
-      text2: `${prayerName} alarm cancelled`,
+      text1: t("salah.alarmRemoved"),
+      text2: `${prayerName} ${t("salah.alarmCancelled")}`,
     });
   };
 
   const onPrayerCardPress = (p: PrayerTimeEntry) => {
     if (hasAlarmFor(p.name)) {
       Alert.alert(
-        p.name + " – Alarm",
-        "Change the time or remove this alarm.",
+        `${t(`salah.${PRAYER_KEYS[p.name] ?? "prayerFajr"}`)} ${t("salah.alarmTitle")}`,
+        t("salah.changeTimeOrRemove"),
         [
-          { text: "Cancel", style: "cancel" },
-          { text: "Remove alarm", style: "destructive", onPress: () => removeAlarm(p.name) },
-          { text: "Change time", onPress: () => openTimePicker(p) },
+          { text: t("salah.cancel"), style: "cancel" },
+          { text: t("salah.removeAlarm"), style: "destructive", onPress: () => removeAlarm(p.name) },
+          { text: t("salah.changeTime"), onPress: () => openTimePicker(p) },
         ]
       );
     } else {
@@ -446,7 +456,7 @@ function Salah({ city = null, country = null }: SalahProps) {
           <View style={styles.clockIconWrap}>
             <MaterialIcons name="schedule" size={22} color={THEME_BLUE} />
           </View>
-          <Text style={styles.salahTitle}>Salah Timings</Text>
+          <Text style={styles.salahTitle}>{t("salah.salahTimings")}</Text>
         </View>
       </View>
       <ScrollView
@@ -468,10 +478,10 @@ function Salah({ city = null, country = null }: SalahProps) {
               </View>
             )}
             <MaterialIcons name={p.icon} size={28} color="#fff" />
-            <Text style={styles.prayerName}>{p.name}</Text>
+            <Text style={styles.prayerName}>{t(`salah.${PRAYER_KEYS[p.name] ?? "prayerFajr"}`)}</Text>
             <Text style={styles.prayerTime}>{p.time}</Text>
             <Text style={salahStyles.alarmHint}>
-              {hasAlarmFor(p.name) ? "Tap to change or remove" : "Tap to set alarm"}
+              {hasAlarmFor(p.name) ? t("salah.tapToChangeOrRemove") : t("salah.tapToSetAlarm")}
             </Text>
           </TouchableOpacity>
         ))}

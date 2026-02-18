@@ -1,0 +1,45 @@
+{
+  "common": {
+    "english": "अंग्रेज़ी",
+    "hindi": "हिंदी",
+    "arabic": "अरबी"
+  },
+  "salah": {
+    "salahTimings": "नमाज़ समय",
+    "tapToSetAlarm": "अलार्म सेट करने के लिए टैप करें",
+    "tapToChangeOrRemove": "बदलने या हटाने के लिए टैप करें",
+    "alarmRemoved": "अलार्म हटाया गया",
+    "alarmCancelled": "अलार्म रद्द",
+    "alarmTitle": "– अलार्म",
+    "changeTimeOrRemove": "समय बदलें या इस अलार्म को हटाएं।",
+    "cancel": "रद्द करें",
+    "removeAlarm": "अलार्म हटाएं",
+    "changeTime": "समय बदलें",
+    "alarmSet": "अलार्म सेट",
+    "alarmSaved": "अलार्म सहेजा गया",
+    "permissionNeeded": "अनुमति आवश्यक",
+    "enableNotifications": "अलार्म सेट करने के लिए नोटिफिकेशन चालू करें",
+    "alarmFailed": "अलार्म विफल",
+    "couldNotSetAlarm": "अलार्म सेट नहीं हो सका",
+    "useDevBuild": "वास्तविक नोटिफिकेशन के लिए डेवलपमेंट बिल्ड का उपयोग करें।",
+    "prayerFajr": "फज्र",
+    "prayerDhuhr": "ज़ुहर",
+    "prayerAsr": "अस्र",
+    "prayerMaghrib": "मग़रिब",
+    "prayerIsha": "इशा"
+  },
+  "location": {
+    "locationUnavailable": "स्थान उपलब्ध नहीं",
+    "permissionDenied": "स्थान की अनुमति अस्वीकृत",
+    "unableToGetLocation": "स्थान प्राप्त नहीं कर सके",
+    "currentLocation": "वर्तमान स्थान"
+  },
+  "compass": {
+    "qiblaDirection": "किबला दिशा",
+    "needleNorthSouth": "सुई: उत्तर/दक्षिण",
+    "distance": "दूरी:",
+    "currentLocation": "वर्तमान स्थान:",
+    "getting": "प्राप्त हो रहा…",
+    "qiblaCoords": "किबला: 21.4225° N, 39.8262° E"
+  }
+}

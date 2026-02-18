@@ -1,8 +1,9 @@
+import { useTranslation } from "@/context/TranslationContext";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ExpoLocation from "expo-location";
 import { Magnetometer } from "expo-sensors";
 import { useCallback, useEffect, useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import Svg, {
     Circle,
     G,
@@ -64,6 +65,7 @@ function degToRad(deg: number) {
 }
 
 const Compass = () => {
+  const { t } = useTranslation();
   const [heading, setHeading] = useState(0);
   const [qiblaBearing, setQiblaBearing] = useState<number | null>(null);
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
@@ -228,31 +230,31 @@ const Compass = () => {
         </View>
 
         <Text style={compassStyles.qiblaLabel}>
-          Qibla: 21.4225° N, 39.8262° E
+          {t("compass.qiblaCoords")}
         </Text>
         {distanceKm != null && (
           <Text style={compassStyles.distanceText}>
-            Distance:{" "}
+            {t("compass.distance")}{" "}
             {distanceKm.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
             km
           </Text>
         )}
 
         <View style={compassStyles.coordsRow}>
-          <Text style={compassStyles.coordsLabel}>Current location: </Text>
+          <Text style={compassStyles.coordsLabel}>{t("compass.currentLocation")} </Text>
           <Text style={compassStyles.coordsValue} numberOfLines={1}>
             {locationError
               ? locationError
               : userCoords
                 ? `${userCoords.lat.toFixed(4)}° N, ${userCoords.lon.toFixed(4)}° E`
-                : "Getting…"}
+                : t("compass.getting")}
           </Text>
         </View>
 
         <View style={compassStyles.keyRow}>
           <View style={compassStyles.keyItem}>
             <View style={[compassStyles.keyDot, compassStyles.keyDotNeedle]} />
-            <Text style={compassStyles.keyText}>Needle: North/South</Text>
+            <Text style={compassStyles.keyText}>{t("compass.needleNorthSouth")}</Text>
           </View>
           <View style={compassStyles.keyItem}>
             <Image
@@ -260,7 +262,7 @@ const Compass = () => {
               style={compassStyles.keyIcon}
               resizeMode="contain"
             />
-            <Text style={compassStyles.keyText}>Qibla direction</Text>
+            <Text style={compassStyles.keyText}>{t("compass.qiblaDirection")}</Text>
           </View>
         </View>
       </View>

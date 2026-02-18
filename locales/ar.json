@@ -1,0 +1,45 @@
+{
+  "common": {
+    "english": "English",
+    "hindi": "Hindi",
+    "arabic": "العربية"
+  },
+  "salah": {
+    "salahTimings": "أوقات الصلاة",
+    "tapToSetAlarm": "اضغط لضبط المنبه",
+    "tapToChangeOrRemove": "اضغط للتغيير أو الإزالة",
+    "alarmRemoved": "تم إزالة المنبه",
+    "alarmCancelled": "تم إلغاء المنبه",
+    "alarmTitle": "– المنبه",
+    "changeTimeOrRemove": "غيّر الوقت أو أزل هذا المنبه.",
+    "cancel": "إلغاء",
+    "removeAlarm": "إزالة المنبه",
+    "changeTime": "تغيير الوقت",
+    "alarmSet": "تم ضبط المنبه",
+    "alarmSaved": "تم حفظ المنبه",
+    "permissionNeeded": "الإذن مطلوب",
+    "enableNotifications": "فعّل الإشعارات لضبط المنبهات",
+    "alarmFailed": "فشل المنبه",
+    "couldNotSetAlarm": "تعذّر ضبط المنبه",
+    "useDevBuild": "استخدم نسخة التطوير للإشعارات الفعلية.",
+    "prayerFajr": "الفجر",
+    "prayerDhuhr": "الظهر",
+    "prayerAsr": "العصر",
+    "prayerMaghrib": "المغرب",
+    "prayerIsha": "العشاء"
+  },
+  "location": {
+    "locationUnavailable": "الموقع غير متاح",
+    "permissionDenied": "تم رفض إذن الموقع",
+    "unableToGetLocation": "تعذّر الحصول على الموقع",
+    "currentLocation": "الموقع الحالي"
+  },
+  "compass": {
+    "qiblaDirection": "اتجاه القبلة",
+    "needleNorthSouth": "الإبرة: شمال/جنوب",
+    "distance": "المسافة:",
+    "currentLocation": "الموقع الحالي:",
+    "getting": "جاري الجلب…",
+    "qiblaCoords": "القبلة: 21.4225° N, 39.8262° E"
+  }
+}

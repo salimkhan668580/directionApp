@@ -1,3 +1,5 @@
+import { useTranslation } from '@/context/TranslationContext';
+import type { Language } from '@/context/TranslationContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useCallback, useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,13 +28,11 @@ export const CARD_SHADOW = Platform.select({
 
 const ALADHAN_GTOH = 'https://api.aladhan.com/v1/gToH';
 
-const LANGUAGE_OPTIONS = [
-  { value: 'hindi', label: 'Hindi' },
-  { value: 'english', label: 'English' },
-  { value: 'arabic', label: 'Arabic' },
-] as const;
-
-type LanguageValue = (typeof LANGUAGE_OPTIONS)[number]['value'];
+const LANGUAGE_OPTIONS: { value: Language }[] = [
+  { value: 'hindi' },
+  { value: 'english' },
+  { value: 'arabic' },
+];
 
 function formatEnglishDate(d: Date): string {
   return d.toLocaleDateString('en-GB', {
@@ -45,9 +45,9 @@ function formatEnglishDate(d: Date): string {
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const windowHeight = Dimensions.get('window').height;
+  const { language, setLanguage, t } = useTranslation();
   const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
   const [hijriText, setHijriText] = useState<string | null>(null);
-  const [language, setLanguage] = useState<LanguageValue>('english');
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
 
   const handleLocationLoaded = useCallback((info: LocationInfo) => {
@@ -114,7 +114,7 @@ export default function HomeScreen() {
               onPress={() => setLanguageDropdownOpen((v) => !v)}
             >
               <Text style={styles.languageTriggerText}>
-                {LANGUAGE_OPTIONS.find((o) => o.value === language)?.label ?? 'English'}
+                {t(`common.${language}`)}
               </Text>
               <MaterialIcons
                 name={languageDropdownOpen ? 'arrow-drop-up' : 'arrow-drop-down'}
@@ -136,7 +136,7 @@ export default function HomeScreen() {
                       setLanguageDropdownOpen(false);
                     }}
                   >
-                    <Text style={styles.languageOptionText}>{opt.label}</Text>
+                    <Text style={styles.languageOptionText}>{t(`common.${opt.value}`)}</Text>
                     {language === opt.value && (
                       <MaterialIcons name="check" size={20} color={THEME_BLUE} />
                     )}

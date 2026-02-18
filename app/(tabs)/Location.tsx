@@ -1,3 +1,4 @@
+import { useTranslation } from "@/context/TranslationContext";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ExpoLocation from "expo-location";
 import { useEffect, useState } from "react";
@@ -15,9 +16,10 @@ type LocationProps = {
 };
 
 const Location = ({ onLocationLoaded }: LocationProps) => {
+  const { t } = useTranslation();
   const [locationName, setLocationName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,7 +28,7 @@ const Location = ({ onLocationLoaded }: LocationProps) => {
       try {
         const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          if (!cancelled) setError("Location permission denied");
+          if (!cancelled) setErrorCode("permissionDenied");
           return;
         }
 
@@ -46,16 +48,14 @@ const Location = ({ onLocationLoaded }: LocationProps) => {
         const city = (address.city ?? address.subregion ?? "").trim();
         const country = (address.country ?? "").trim();
         const parts = [city, address.region, country].filter(Boolean);
-        const name = parts.length > 0 ? parts.join(", ") : "Current location";
+        const name = parts.length > 0 ? parts.join(", ") : "";
         setLocationName(name);
         if (city && country) {
           onLocationLoaded?.({ city, country, locationName: name });
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) {
-          setError(
-            e instanceof Error ? e.message : "Unable to get location"
-          );
+          setErrorCode("unableToGetLocation");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -76,7 +76,7 @@ const Location = ({ onLocationLoaded }: LocationProps) => {
           <ActivityIndicator size="small" color="#fff" />
         ) : (
           <Text style={styles.locationText} numberOfLines={1}>
-            {error ?? locationName ?? "Location unavailable"}
+            {errorCode ? t(`location.${errorCode}`) : locationName === "" ? t("location.currentLocation") : locationName ?? t("location.locationUnavailable")}
           </Text>
         )}
         <MaterialIcons name="place" size={20} color="#fff" />
