@@ -221,7 +221,7 @@ const Compass = () => {
               pointerEvents="none"
             >
               <Image
-                source={require("@/assets/images/Kaaba.png")}
+                source={require("@/assets/images/Qubla png.png")}
                 style={compassStyles.qiblaIcon}
                 resizeMode="contain"
               />
@@ -258,7 +258,7 @@ const Compass = () => {
           </View>
           <View style={compassStyles.keyItem}>
             <Image
-              source={require("@/assets/images/Kaaba.png")}
+              source={require("@/assets/images/Qubla png.png")}
               style={compassStyles.keyIcon}
               resizeMode="contain"
             />
